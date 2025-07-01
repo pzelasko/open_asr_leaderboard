@@ -3,6 +3,7 @@
 export PYTHONPATH="..":$PYTHONPATH
 
 MODEL_IDs=(
+    nvidia/canary-qwen-2.5b
 )
 BATCH_SIZE=192
 DEVICE_ID=0

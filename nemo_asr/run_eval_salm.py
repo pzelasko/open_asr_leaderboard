@@ -27,7 +27,7 @@ wer_metric = evaluate.load("wer")
 
 class ToAudio(torch.utils.data.Dataset):
     def __getitem__(self, cuts):
-        audios, audio_lens = cuts.pad(duration=1.0, direction="both").load_audio(collate=True)
+        audios, audio_lens = cuts.load_audio(collate=True)
         return {"cuts": cuts, "audios": audios, "audio_lens": audio_lens}
 
 
@@ -53,7 +53,12 @@ def transcribe(model, dloader) -> list[str]:
             ] * len(batch["cuts"]),
             audios=batch["audios"].to(model.device, non_blocking=True),
             audio_lens=batch["audio_lens"].to(model.device, non_blocking=True),
-            max_new_tokens=128,
+            generation_config=GenerationConfig(
+                max_new_tokens=128,
+                bos_token_id=model.text_bos_id,
+                eos_token_id=eos_tokens,
+                pad_token_id=model.text_pad_id,
+            ),
         )
         answer_ids = [parse_hyp(ans, eos_tokens) for ans in answer_ids.cpu()]
         hyps.extend(model.tokenizer.ids_to_text(ans).strip() for ans in answer_ids)
@@ -197,7 +202,6 @@ def main(args):
     wer = wer_metric.compute(references=all_data['references'], predictions=predictions)
     wer = round(100 * wer, 2)
 
-    # transcription_time = sum(all_results["transcription_time"])
     audio_length = sum(all_data["durations"])
     rtfx = audio_length / total_time
     rtfx = round(rtfx, 2)
