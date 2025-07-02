@@ -86,8 +86,7 @@ def main(args):
     torch.set_float32_matmul_precision("medium")
 
     device = torch.device(f"cuda:{args.device}")
-    with device:
-        model = SALM.from_pretrained(args.model_id).eval().to(torch.bfloat16).to(device)
+    model = SALM.from_pretrained(args.model_id).eval().to(torch.bfloat16).to(device)
 
     dataset = data_utils.load_data(args)
 
